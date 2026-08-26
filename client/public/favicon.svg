@@ -1,0 +1,6 @@
+<svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- solid cream hexagon -->
+  <polygon points="100,20 172,60 172,140 100,180 28,140 28,60" fill="#EDEAE0"/>
+  <!-- solid black H drawn on top -->
+  <path d="M62,72 L78,72 L78,93 L122,93 L122,72 L138,72 L138,128 L122,128 L122,107 L78,107 L78,128 L62,128 Z" fill="#0B0F1A"/>
+</svg>

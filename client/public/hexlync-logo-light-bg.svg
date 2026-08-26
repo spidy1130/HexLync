@@ -1,0 +1,10 @@
+<svg width="480" height="160" viewBox="0 0 480 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- icon: hexagon with negative-space H, flat dark color for light backgrounds -->
+  <path d="
+    M80,20 L140,52 L140,108 L80,140 L20,108 L20,52 Z
+    M46,64 L46,96 L58,96 L58,84 L102,84 L102,96 L114,96 L114,64 L102,64 L102,76 L58,76 L58,64 Z
+  " fill="#0B0F1A" fill-rule="evenodd"/>
+
+  <!-- wordmark -->
+  <text x="168" y="94" font-family="Space Grotesk, sans-serif" font-size="52" font-weight="600" fill="#0B0F1A" letter-spacing="0.2">HexLync</text>
+</svg>
