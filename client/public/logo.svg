@@ -1,4 +1,6 @@
-<svg width="54" height="70" viewBox="0 0 54 70" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <path d="M24.386 8.817c4.972-4.868 12.948-4.785 17.816.186 4.869 4.971 4.785 12.948-.186 17.816q-.506.494-.987.867L23.508 9.794q.372-.481.878-.977M11.97 42.611c-4.941 4.9-4.974 12.877-.075 17.817 4.9 4.94 12.877 4.974 17.817.074q.502-.5.88-.975L12.96 41.747a10 10 0 0 0-.99.864" fill="#1e2939"/>
-  <rect y="22.652" width="21.312" height="55.056" rx="10.656" transform="rotate(-45 0 22.652)" fill="#1e2939"/>
+<svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- solid black hexagon -->
+  <polygon points="100,20 172,60 172,140 100,180 28,140 28,60" fill="#0B0F1A"/>
+  <!-- solid white H drawn on top -->
+  <path d="M62,72 L78,72 L78,93 L122,93 L122,72 L138,72 L138,128 L122,128 L122,107 L78,107 L78,128 L62,128 Z" fill="#FFFFFF"/>
 </svg>
