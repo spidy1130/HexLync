@@ -12,7 +12,7 @@ const Navbar = () => {
   return (
     <header className="w-full max-w-305 mx-auto bg-white/90 backdrop-blur xl:rounded-b-xl
     sticky top-0 z-40 px-6 py-4 flex items-center justify-between border border-slate-200">
-    {/* Brand logo & navigation link */}
+      {/* Brand logo & navigation link */}
       <div className='flex items-center gap-6'>
         <Link to='/dashboard' className='flex items-center gap-1.5'>
             <img src="/logo.svg" alt="HexLync logo" className='size-7.5'/>
@@ -59,22 +59,22 @@ const Navbar = () => {
         )}
       </div>
 
-    {/* Right profile /Userbutton  */}
-    {isSignedIn &&(
-        <div className='flex items-center gap-4'>
-            <Link to="/sessions" className='md:hidden text-xs font-medium text-slate-600 
-            hover:text-primary flex items-center gap-1'>
-              <HistoryIcon className='w-4 h-4'/>
-              Sessions
+      {/* Right profile /Userbutton  */}
+      {isSignedIn &&(
+          <div className='flex items-center gap-4'>
+              <Link to="/sessions" className='md:hidden text-xs font-medium text-slate-600 
+              hover:text-primary flex items-center gap-1'>
+                <HistoryIcon className='w-4 h-4'/>
+                Sessions
 
-            </Link>
-            <span className='font-medium hidden sm:inline tracking-wide text-sm
-            text-slate-700'>Welcome, {userName}</span>
-            <UserButton afterSignOutUrl="/login"/>
-        </div>
-    )
+              </Link>
+              <span className='font-medium hidden sm:inline tracking-wide text-sm
+              text-slate-700'>Welcome, {userName}</span>
+              <UserButton afterSignOutUrl="/login"/>
+          </div>
+      )
 
-    }
+      }
 
     </header>
   )
