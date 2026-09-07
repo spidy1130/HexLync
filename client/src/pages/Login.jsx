@@ -19,7 +19,7 @@ const Login = ({mode = "login"}) => {
                 <SignUp routing="path" path="/register" signInUrl="/login"
                 fallbackRedirectUrl="/dashboard"/>
            ):(
-                <SignIn routing="path" path="/login" signInUrl="/register"
+                <SignIn routing="path" path="/login" signUpUrl="/register"
                 fallbackRedirectUrl="/dashboard"/>
            )}
         </div>
