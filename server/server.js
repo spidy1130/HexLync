@@ -4,11 +4,10 @@ import cors from "cors"
 import cookieParser from "cookie-parser";
 import { initDB } from "./config/db.js";
 import { clerkMiddleware } from '@clerk/express'
-import { handleClerkWebhook } from "./controllers/webhookcontroller.js";
-
+import { handleClerkWebhook } from "./controllers/webhookController.js"
 const app=express();
 //connect to neon & initilize tables
-initDB()
+await initDB()
 
 const allowedOrigins=process.env.ORIGINS.split(",")
 app.use(cors({origin:allowedOrigins,credentials: true}))

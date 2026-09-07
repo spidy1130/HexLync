@@ -19,7 +19,7 @@ export const handleClerkWebhook=async (req,res) => {
                 await sql`
                 INSERT INTO users (id,name,email,image,plan)
                 VALUES(${userId},${name},${primaryEmail},${image},${plan})
-                ON CONFLICT (email) do update set
+                ON CONFLICT (id) do update set
                 id=EXCLUDED.id,
                 name=EXCLUDED.name,
                 image=EXCLUDED.image,
@@ -38,7 +38,7 @@ export const handleClerkWebhook=async (req,res) => {
                 await sql`
                 INSERT INTO users (id,name,email,image)
                 VALUES(${userId},${name},${primaryEmail},${image})
-                ON CONFLICT (email) do update set
+                ON CONFLICT (id) do update set
                 id=EXCLUDED.id,
                 name=EXCLUDED.name,
                 image=EXCLUDED.image,
