@@ -11,7 +11,7 @@ export const protect=async(req,res,next)=>{
 
     req.user = {id: userId};
 
-    const userActivePlan = auth.has({plan: "Sync"}) ? "Sync" : "free";
+    const userActivePlan = auth.has({plan: "sync"}) ? "sync" : "free";
 
     const users = await sql`SELECT name, plan FROM users WHERE id = ${userId}`
     const userPlan = users[0]?.plan;

@@ -1,12 +1,20 @@
 import express from "express";
 import "dotenv/config"
 import cors from "cors"
+import http from "http"
 import cookieParser from "cookie-parser";
 import { initDB } from "./config/db.js";
 import { clerkMiddleware } from '@clerk/express'
 import { handleClerkWebhook } from "./controllers/webhookController.js"
 import meetingRouter from "./routes/meetingRoutes.js";
+import { Server } from "socket.io";
+import { setupSocketIO } from "./socket.js";
+
 const app=express();
+const server=http.createServer(app)
+
+
+
 //connect to neon & initilize tables
 await initDB()
 
@@ -23,8 +31,19 @@ app.get("/",(req,res)=> res.send("Api is live!"))
 
 app.use("/api/meetings",meetingRouter)
 
+
+const io=new Server(server,{
+    cors:{origin:allowedOrigins,credentials:true}
+})
+setupSocketIO(io)
+
+//centeralize error handler
+app.use((err,_req,res,_next)=>{
+    console.error(`[Error] ${err.message}`);
+    res.status(500).json({error: "Internal server error"})
+})
 const port=process.env.PORT|| 3000;
-app.listen(port,()=>{
+server.listen(port,()=>{
     console.log(`server is listening at http://localhost:${port}`);
 })
 
