@@ -1,36 +1,65 @@
 import { ArrowRight, ArrowRightIcon, KeyboardIcon, PlusIcon, ShieldCheckIcon } from 'lucide-react'
-import React, { useEffect, useState } from 'react'
-import { dummyStats, dummyUser } from '../assets/asset'
+import React, { useEffect, useState } from 'react'   
 import {useNavigate} from "react-router-dom"
 import toast from "react-hot-toast"
-import { useUser } from '@clerk/react'
+import { useAuth, useUser } from '@clerk/react'
+import api from '../config/api.js'
 
 const DashBoard = () => {
   const {user}=useUser();
   const userName=user.fullName;
   const userEmail=user.primaryEmailAddress.emailAddress;
+
+  const {isLoaded,isSignedIn,getToken}=useAuth()
+
+
   const navigate=useNavigate();
   const [isCreating,setIsCreating]=useState(false)
   const [currentTime,setCurrentTime]=useState(new Date())
    const [joinId,setJoinId]=useState("")
-  const stats=dummyStats;
+  const [stats,setStats]=useState(null);
   useEffect(()=>{
     const timer=setInterval(()=>setCurrentTime(new Date()),1000)
     return ()=>clearInterval(timer )
   },[])
-  const handleCreateMeeting=()=>{
+
+  useEffect(()=>{
+    const fetchStats=async ()=>{
+      if(!isLoaded || !isSignedIn) return;
+      try {
+        const token=await getToken();
+        const {data}= await api.get("/api/meetings/stats",{
+          headers: {Authorization: `Bearer ${token}`},
+        })
+        setStats(data)
+      } catch (error) {
+        toast.error(error.response?.data?.error || error.message)
+      }
+    }
+    fetchStats();
+  },[isLoaded,isSignedIn,getToken])
+
+  const handleCreateMeeting=async ()=>{
+    if(!isLoaded || !isSignedIn)  return;
       setIsCreating(true)
-      const chars="abcdefghijklmnopqrstuvwxyz"
-      const seg=()=>Array.from({length:3},()=>chars[Math.floor(Math.random()*chars.length)]).join("");
-      const newMeetingId=`${seg()}-${seg()}-${seg()}`;
-      setTimeout(()=>{
+      
+      try {
+        const token=await getToken();
+        const res=await api.post("/api/meetings",{title:`${userName}'s Meeting`},{
+          headers:{Authorization: `Bearer ${token}`}
+        })
+
+        const meetingId=res.data.meeting.meetingId;
+        toast.success("Meeting created!");
+        navigate(`/meeting/${meetingId}`)
+      } catch (error) {
+        toast.error(error.response?.data?.error|| error.message);
+      }finally{
         setIsCreating(false)
-        toast.success("Meeting Created!")
-        navigate(`/meeting/${newMeetingId}`)
-      },400)
+      }
 
   }
-  const handleJoinMeeting=(e)=>{
+  const handleJoinMeeting=async (e)=>{
     e.preventDefault();
     const cleanId=joinId.trim()
     const meetingIdPattern=/^[a-z]{3}-[a-z]{3}-[a-z]{3}$/i
@@ -39,7 +68,14 @@ const DashBoard = () => {
       toast.error("Please enter a valid Meeting ID like abc-def-ghi")
       return;
     }
-    navigate(`/meeting/${cleanId}`)
+    
+    try {
+      const token=await getToken();
+      await api.get(`/api/meetings/${cleanId}`, {headers: { Authorization: `Bearer ${token}`,}})
+      navigate(`/meeting/${cleanId}`);
+    } catch (error) {
+      toast.error("Meeting not found. Check the ID and try again.");
+    }
 
   }
 
@@ -117,7 +153,7 @@ const DashBoard = () => {
                     <p>Logged in as: <span className='text-slate-900'>{userEmail}</span></p>
 
                     <span className={`px-4 py-1 rounded-full font-semibold text-xs uppercase 
-                    ${stats?.plan=== "premium"?"bg-blue-700 text-white":"bg-white/70 text-slate-800"}`}>
+                    ${stats?.plan=== "sync"?"bg-blue-700 text-white":"bg-white/70 text-slate-800"}`}>
                       {stats?.plan ||"Free"}
                     </span>
 

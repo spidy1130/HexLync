@@ -14,9 +14,9 @@ const VideoTile = ({stream , name , isLocal=false , audioEnabled=true , videoEna
         {/* video element */}
         <video ref={videoRef} autoPlay playsInline muted={isLocal} className=
         {`w-full h-full object-cover transition-opacity duration-300 
-            ${videoEnabled? "opacity-100":"opacity-0 pointer-events-none absolute"} ${isLocal?"-scale-x-100":""}`}/>
+            ${videoEnabled && stream ? "opacity-100":"opacity-0 pointer-events-none absolute"} ${isLocal?"-scale-x-100":""}`}/>
             {/* camera off placeholder */}
-            {(!videoEnabled ) && (
+            {(!videoEnabled || !stream) && (
                 <div className='flex flex-col items-center justify-center space-y-3 z-10'>
                     <div className="w-20 h-20 rounded-full bg-indigo-600/20 border-2 
                     border-indigo-400/10 flex  items-center justify-center text-indigo-300 text-2xl font-bold uppercase shadow-inner">
@@ -25,7 +25,7 @@ const VideoTile = ({stream , name , isLocal=false , audioEnabled=true , videoEna
                     <span className='text-xs font-semibold px-3 py-1 rounded-full bg-slate-800/90 text-slate-300
                     border border-slate-700/60 flex items-center gap-1.5 shadow-xs '>
                         <VideoOffIcon className='w-3.5 h-3.5 text-rose-400'/>
-                        Camera Off
+                        {stream ? "Camera Off" : "Camera Unavailable"}
                     </span>
 
 
