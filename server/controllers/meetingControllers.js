@@ -1,12 +1,13 @@
 import { sql } from "../config/db.js";
+
 const generateMeetingId = () =>{
     const chars = 'abcdefghijklmnopqrstuvwxyz';
     const segment = (len)=> Array.from({length: len}, ()=> chars[Math.floor(Math.random() * chars.length)]).join("");
     return `${segment(3)}-${segment(3)}-${segment(3)}`
 }
 
-//create meeting
-export const createMeeting=async (req,res)=>{
+// create meeting
+export const createMeeting = async (req, res)=>{
     try {
         const { title } = req.body;
         const userId = req.user.id;
@@ -27,7 +28,7 @@ export const createMeeting=async (req,res)=>{
 
             if(monthlyCount >= 30){
                 return res.status(403).json({
-                     error: "Monthly limit reached. Free plan includes 30 meetings per month. Please upgrade to Premium for unlimited meetings!",
+                     error: "Monthly limit reached. Free plan includes 30 meetings per month. Please upgrade to sync for unlimited meetings!",
                      limitReached: true,
                      monthlyCount,
                      limit: 30,
@@ -73,15 +74,15 @@ export const createMeeting=async (req,res)=>{
     }
 }
 
-//get meeting by id
-export const getMeeting=async (req,res)=>{
-   try {
+// get meeting by id
+export const getMeeting = async (req, res)=>{
+    try {
         const { meetingId } = req.params;
 
-        const meetings = await sql`SELECT m.*, u.id as host_user_id, u.name as host_name, u.email 
-        as host_email FROM meetings m JOIN users u ON m.host_id = u.id WHERE m.meeting_id = ${meetingId}`;
+        const meetings = await sql`SELECT m.*, u.id as host_user_id, u.name as host_name, u.email
+         as host_email FROM meetings m JOIN users u ON m.host_id = u.id WHERE m.meeting_id = ${meetingId}`;
 
-        if(meetings.length === 0){
+        if(meetings.length === 0){ 
             return res.status(404).json({ error: "Meeting not found" });
         }
 
@@ -108,20 +109,19 @@ export const getMeeting=async (req,res)=>{
 
     } catch (error) {
         console.error("Fetch Meeting failed:", error);
-+        res.status(500).json({ error: "Failed to fetch meeting" });
+       res.status(500).json({ error: "Failed to fetch meeting" });
     }
 }
 
-
-//get all user's meeting sessions
-export const getUserSessions=async (req,res)=>{
+// get all user's meetings sessions
+export const getUserSessions = async (req, res)=>{
     try {
         const userId = req.user.id;
-
+ 
         // Fetch meetings where user is host OR listed in participants
         const meetings = await sql`
             SELECT DISTINCT m.id, m.meeting_id, m.title, m.status, m.created_at, m.ended_at,
-                   m.host_id, u.name as host_name, u.email as host_email
+              m.host_id, u.name as host_name, u.email as host_email
             FROM meetings m
             JOIN users u ON m.host_id = u.id
             LEFT JOIN meeting_participants mp ON m.id = mp.meeting_id
@@ -177,12 +177,12 @@ export const getUserSessions=async (req,res)=>{
     res.json({meetings: formattedMeetings})
     } catch (error) {
         console.error("get User sessions failed:", error);
-+        res.status(500).json({ error: "Failed to get user sessions" });
+       res.status(500).json({ error: "Failed to get user sessions" });
     }
 }
 
-//get meeting sessions details by id
-export const getSessionDetails=async (req,res)=>{
+// get meeting session details by id
+export const getSessionDetails = async (req, res)=>{
     try {
         const {id} = req.params;
         const userId = req.user.id;
@@ -256,13 +256,13 @@ export const getSessionDetails=async (req,res)=>{
         res.json({ meeting: formattedMeeting });
     } catch (error) {
         console.error("get session details failed:", error);
-+        res.status(500).json({ error: "Failed to get session details" });
+        res.status(500).json({ error: "Failed to get session details" });
     }
-
 }
 
-//get plan and meeting statistics for user details
-export const getMeetingStats=async (req,res)=>{
+
+// get plan & meetings statistics for user dashboard
+export const getMeetingStats = async (req, res)=>{
     try {
         const userId = req.user.id;
         const users = await sql`SELECT plan FROM users WHERE id = ${userId}`;
@@ -285,6 +285,6 @@ export const getMeetingStats=async (req,res)=>{
 
     } catch (error) {
         console.error("get meeting stats failed:", error);
-+        res.status(500).json({ error: "Failed to get meeting stats" });
+        res.status(500).json({ error: "Failed to get meeting stats" });
     }
 }

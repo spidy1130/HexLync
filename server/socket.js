@@ -1,4 +1,5 @@
 import { sql } from "./config/db.js";
+import { verifyToken } from "@clerk/backend";
 
 // Socket.IO Room State: roomId -> Map<socketId, participantObject>
 const rooms = new Map();
@@ -28,11 +29,14 @@ export function setupSocketIO(io){
                 }
 
                 currentRoomId = roomId;
-                const isHost = meeting.host_id && user?.id && meeting.host_id.toString() === user.id.toString();
+                const isHost =
+                meeting.host_id &&
+                socket.data.userId &&
+                meeting.host_id.toString() === socket.data.userId.toString();
 
                 currentUser = {
                     socketId: socket.id,
-                    userId: user?.id,
+                    userId: socket.data.userId,
                     userName: user?.name || "Anonymous",
                     isHost,
                     audioEnabled,
@@ -45,7 +49,7 @@ export function setupSocketIO(io){
 
                 const roomParticipants = rooms.get(roomId);
 
-                // Fetch host plan to enforce participant limits (10 for Free, 100 for Premium)
+                // Fetch host plan to enforce participant limits (10 for Free, 100 for sync)
                 const hosts = await sql`SELECT plan FROM users WHERE id = ${meeting.host_id}`;
 
                 const hostPlan = hosts[0]?.plan || "free";
@@ -53,7 +57,7 @@ export function setupSocketIO(io){
 
                 if (roomParticipants.size >= maxParticipants){
                     socket.emit("meeting-ended", {
-                        message: `Meeting capacity limit reached (max ${maxParticipants} participants for ${hostPlan.toUpperCase()} plan). Host must upgrade to Premium for up to 100 participants!`,
+                        message: `Meeting capacity limit reached (max ${maxParticipants} participants for ${hostPlan.toUpperCase()} plan). Host must upgrade to sync for up to 100 participants!`,
                     })
                     return;
                 }
@@ -66,7 +70,7 @@ export function setupSocketIO(io){
                 roomParticipants.set(socket.id, currentUser);
 
                 // Save participant into DB if not already present
-                const userId = user?.id || null;
+                const userId = socket.data.userId;
                 const existingParticipants = await sql`
                     SELECT id FROM meeting_participants
                     WHERE meeting_id = ${meeting.id}
@@ -167,19 +171,41 @@ export function setupSocketIO(io){
 
         // Host explicitly ends meeting for all via End Meeting button
         
-        socket.on('end-meeting', async ({ roomId})=>{
-             try {
+        socket.on("end-meeting", async ({ roomId }) => {
+            try {
+                const meetings = await sql`
+                    SELECT id, host_id
+                    FROM meetings
+                    WHERE meeting_id = ${roomId}
+                `;
+
+                const meeting = meetings[0];
+
+                if (
+                    !meeting ||
+                    String(meeting.host_id) !== String(socket.data.userId)
+                ) {
+                    socket.emit("meeting-ended", {
+                        message: "Only the meeting host can end this meeting.",
+                    });
+                    return;
+                }
+
                 await sql`
                     UPDATE meetings
                     SET status = 'ended', ended_at = NOW()
-                    WHERE meeting_id = ${roomId}`;
+                    WHERE id = ${meeting.id}
+                `;
 
-                    io.on(roomId).emit("meeting-ended", { message: "The meeting has been ended by the host." });
-                    rooms.delete(roomId);
-             } catch (err) {
+                io.to(roomId).emit("meeting-ended", {
+                    message: "The meeting has been ended by the host.",
+                });
+
+                rooms.delete(roomId);
+            } catch (err) {
                 console.error("Error ending meeting:", err);
-             }
-        })
+            }
+        });
 
         // Handle Disconnect (Reloading window, network drop, or closing tab)
         socket.on('disconnect', ()=>{
@@ -200,4 +226,23 @@ export function setupSocketIO(io){
         })
 
     })
+    io.use(async (socket, next) => {
+    const token = socket.handshake.auth?.token;
+
+    if (!token) {
+        return next(new Error("Unauthorized"));
+    }
+
+    try {
+        const payload = await verifyToken(token, {
+            secretKey: process.env.CLERK_SECRET_KEY,
+            authorizedParties: process.env.ORIGINS.split(","),
+        });
+
+        socket.data.userId = payload.sub;
+        next();
+    } catch {
+        next(new Error("Unauthorized"));
+    }
+});
 }

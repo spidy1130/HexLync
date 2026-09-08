@@ -1,18 +1,18 @@
 import { SendIcon, XIcon } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react'
 
-const ChatPanel = ({isOpen,onClose,messages,onSendMessages , currentUser }) => {
+const ChatPanel = ({isOpen,onClose,messages,onSendMessage , currentUser }) => {
     const [text,setText]=useState("")
     const messagesEndRef =useRef(null);
     useEffect(()=>{
-        if(!isOpen){
+        if(isOpen){
             messagesEndRef.current?.scrollIntoView({behavior:"smooth"})
         }
     },[messages,isOpen])
     const handleSubmit=(e)=>{
         e.preventDefault(); 
         if(text.trim()){
-            onSendMessages(text);
+            onSendMessage(text);
             setText("")
         }
     }

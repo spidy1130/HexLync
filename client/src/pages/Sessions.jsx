@@ -7,6 +7,7 @@ import SessionDetailModal from '../components/sessions/SessionDetailModal'
 import { useAuth } from '@clerk/react'  
 import api from '../config/api.js'
 import Loader from "../components/Loader"
+import toast from 'react-hot-toast'
 
 const Sessions = () => {
   const [sessions,setSessions]=useState([])
