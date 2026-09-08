@@ -11,13 +11,16 @@
   "author": "",
   "license": "ISC",
   "type": "module",
-  "engines": {"node": ">=20.9.0"},
+  "engines": {
+    "node": ">=20.9.0"
+  },
   "dependencies": {
     "@clerk/express": "^2.1.66",
     "@neondatabase/serverless": "^1.1.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
-    "express": "^5.2.1"
+    "express": "^5.2.1",
+    "socket.io": "^4.8.3"
   }
 }

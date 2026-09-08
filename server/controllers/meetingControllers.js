@@ -7,15 +7,15 @@ const generateMeetingId = () =>{
 
 //create meeting
 export const createMeeting=async (req,res)=>{
-     try {
-        const {title}=req.body;
-        const userId=req.user.id;
+    try {
+        const { title } = req.body;
+        const userId = req.user.id;
 
-        //fetch user details
+        // Fetch user details & plan
         const users = await sql`SELECT name, plan FROM users WHERE id = ${userId}`;
         const userPlan = users[0]?.plan || "free";
 
-         // check meetings limit per calendar month
+        // check meetings limit per calendar month
         if(userPlan === "free"){
             const monthlyCountResult = await sql`
             SELECT COUNT(*) as count 
@@ -33,41 +33,43 @@ export const createMeeting=async (req,res)=>{
                      limit: 30,
                 })
             }
-            let meetingId=generateMeetingId()
-            //ensure meeting id is unique
-            let existing = await sql`SELECT id FROM meetings WHERE meeting_id = ${meetingId}`;
-            while(existing.length > 0){
-                meetingId = generateMeetingId();
-                existing = await sql`SELECT id FROM meetings WHERE meeting_id = ${meetingId}`;
-            }
-
-            const [meeting] = await sql`
-            INSERT INTO meetings(meeting_id, title, host_id, status) 
-            VALUES (${meetingId}, ${title || "Instant Meeting"}, ${userId}, 'active') 
-            RETURNING id, meeting_id, title, host_id, status, created_at
-            `
-
-            const hostName = users[0]?.name || "Host";
-            
-            //Insert host into participants
-            await sql`INSERT INTO meeting_participants (meeting_id, user_id, name) 
-            VALUES (${meeting.id}, ${userId}, ${hostName})`;
-
-            res.status(201).json({
-                meeting: {
-                    id: meeting.id,
-                    meetingId: meeting.meeting_id,
-                    title: meeting.title,
-                    host: meeting.host_id,
-                    status: meeting.status,
-                    createdAt: meeting.created_at,
-                }
-            })
         }
-    } catch (error) {
-        //console.error("createMeeting failed:", error);
-+        res.status(500).json({ error: error.message });
+
+        let meetingId = generateMeetingId()
+
+        // Ensure unique ID
+        let existing = await sql`SELECT id FROM meetings WHERE meeting_id = ${meetingId}`;
+        while(existing.length > 0){
+             meetingId = generateMeetingId();
+             existing = await sql`SELECT id FROM meetings WHERE meeting_id = ${meetingId}`;
+        }
+ 
+        const [meeting] = await sql`
+        INSERT INTO meetings(meeting_id, title, host_id, status) 
+        VALUES (${meetingId}, ${title || "Instant Meeting"}, ${userId}, 'active') 
+        RETURNING id, meeting_id, title, host_id, status, created_at
+        `
+
+        const hostName = users[0]?.name || "Host";
+
+         // Insert host into participants
+         await sql`INSERT INTO meeting_participants (meeting_id, user_id, name) 
+         VALUES (${meeting.id}, ${userId}, ${hostName})`;
+
+         res.status(201).json({
+            meeting: {
+                id: meeting.id,
+                meetingId: meeting.meeting_id,
+                title: meeting.title,
+                host: meeting.host_id,
+                status: meeting.status,
+                createdAt: meeting.created_at,
+            }
+         })
         
+    } catch (error) {
+        console.error("createMeeting failed:", error);
+        res.status(500).json({ error: "Failed to create meeting" });
     }
 }
 
