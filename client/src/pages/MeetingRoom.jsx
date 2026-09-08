@@ -2,30 +2,78 @@ import React, { useCallback, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { dummyMeetingDetails, dummyUser } from '../assets/asset'
 import VideoGrid from '../components/meeting/VideoGrid'
-import useWebRTC from '../hooks/useWebRTC'
+import {useWebRTC} from '../hooks/useWebRTC'
 import ChatPanel from '../components/meeting/ChatPanel'
 import { useChat } from '../hooks/useChat'
 import ParticipantList from '../components/meeting/ParticipantList'
 import ControlBar from '../components/meeting/ControlBar'
 import toast from 'react-hot-toast'
+import { useAuth, useUser } from '@clerk/react'
+import { useMemo } from 'react'
+import api from '../config/api.js'
+import Loader from '../components/Loader'
+import { useEffect } from 'react'
 
 const MeetingRoom = () => {
   const {meetingId} =useParams()
   const navigate=useNavigate()
-  const user=dummyUser;
+  const {user}=useUser()
+  const {getToken}=useAuth()
 
 
-  const [isParticipantsOpen,setIsParticipantsOpen]=useState(false);
+  const userData=useMemo(()=>{
+    if(!user) return null;
+    return {
+      id: user.id,
+      name: user.fullName || user.firstName || user.primaryEmailAddress?.emailAddress?.split
+      ("@")[0] || "User",
+      email: user.primaryEmailAddress?.emailAddress || "",
+      image: user.imageUrl || "",
+    }
+  },[user?.id, user?.fullName, user?.firstName, user?.primaryEmailAddress?.emailAddress, user?.imageUrl])
+
+   const [meeting, setMeeting] = useState(null)
+   const [loadingMeeting, setLoadingMeeting] = useState(true);
+  const [isParticipantsOpen, setIsParticipantsOpen] = useState(false)
+
+
+  // Fetch meeting details to verify validity BEFORE enabling WebRTC camera access
+  useEffect(()=>{
+    const fetchMeeting = async ()=>{
+      try {
+        const token = await getToken();
+        const res = await api.get(`/api/meetings/${meetingId}`, {
+          headers: { Authorization: `Bearer ${token}`, },
+        })
+        if (res.data.meeting.status === "ended"){
+          toast.error("This meeting has ended");
+           navigate("/dashboard");
+           return;
+        }
+        setMeeting(res.data.meeting)
+      } catch (error) {
+        const errorMsg = error.response?.data?.error || "Meeting not found or has ended";
+        toast.error(errorMsg);
+        navigate("/dashboard");
+      }finally{
+        setLoadingMeeting(false);
+      }
+    }
+
+    fetchMeeting();
+
+  },[meetingId, navigate])
   const handleMeetingEnded=useCallback(()=>{
     navigate('/dashboard')
   },[navigate])
   //initilize webrtc
   const {localStream,remoteUsers,audioEnabled,videoEnabled,toggleAudio,toggleVideo,endMeeting}=
-  useWebRTC(meetingId,user,handleMeetingEnded)
+  useWebRTC(meetingId,userData,handleMeetingEnded)
   //Initilize chat
-  const {messages,sendMessage,unreadCount,isChatOpen,toggleChat}=useChat(meetingId,user)
+  const {messages,sendMessage,unreadCount,isChatOpen,toggleChat}=useChat(meetingId,userData)
 
-  const isHost=true;
+  const hostId=meeting?.host?.id||meeting?.host;
+  const isHost=Boolean(userData?.id && hostId && hostId.toString()===userData.id.toString())
   const handleleave=()=>{
       toast("You left the meeting");
       navigate("/dashboard")
@@ -34,6 +82,9 @@ const MeetingRoom = () => {
       endMeeting();
       toast("Meeting ended for all users")
       navigate("/dashboard")
+  }
+  if(loadingMeeting){
+    return <Loader text='Joining meeting mesh...'/>
   }
   return (
 
@@ -56,7 +107,7 @@ const MeetingRoom = () => {
         {/* video gird center */}
         <VideoGrid 
         localStream={localStream}
-        localUser={user}
+        localUser={userData}
         remoteUsers={remoteUsers}
         audioEnabled={audioEnabled}
         videoEnabled={videoEnabled}/>
@@ -67,13 +118,13 @@ const MeetingRoom = () => {
           onClose={toggleChat}
           messages={messages}
           onSendMessages={sendMessage}
-          currentUser={user}/>
+          currentUser={userData}/>
 
         {/* participants drawer */}
         <ParticipantList 
         isOpen={isParticipantsOpen}
         onClose={()=>setIsParticipantsOpen(false)}
-        localUser={user}
+        localUser={userData}
         localAudio={audioEnabled}
         localVideo={videoEnabled}
         remoteUsers={remoteUsers}

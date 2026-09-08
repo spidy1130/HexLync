@@ -21,7 +21,7 @@ export const handleClerkWebhook=async (req,res) => {
                 VALUES(${userId},${name},${primaryEmail},${image},${plan})
                 ON CONFLICT (id) do update set
                 id=EXCLUDED.id,
-                email=EXCLUDED.email,
+                 email = COALESCE(NULLIF(EXCLUDED.email, ''), users.email),
                 name=EXCLUDED.name,
                 image=EXCLUDED.image,
                 plan=EXCLUDED.plan,
@@ -65,6 +65,6 @@ export const handleClerkWebhook=async (req,res) => {
         
     } catch (error) {
         console.error("Error verifying Clerk Webhook:",error.message||error);
-        return res.status(400).json({error:"Webhook verification failed: "+err.message || err})
+        return res.status(400).json({error:"Webhook verification failed: "+error.message || error})
     }
 }
